@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Theme bootstrap — runs before any stylesheet paints, so the correct
+         theme (saved preference, or the OS preference if none saved yet) is
+         set as an attribute on <html> from the very first frame. Without
+         this, the app would always flash dark (the loader's hardcoded
+         fallback) for a moment even for someone whose system/saved theme is
+         light. Mirrors the resolution order in core/store.tsx's
+         resolveTheme() exactly, but duplicated here in plain JS since this
+         must run standalone, before the app bundle has even started
+         loading. Keep the two in sync if that logic ever changes. -->
+    <script>
+      (function () {
+        try {
+          var pref = 'system';
+          var raw = localStorage.getItem('mathengine:v1:settings');
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && (parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system')) {
+              pref = parsed.theme;
+            }
+          }
+          var resolved = pref === 'system' ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : pref;
+          document.documentElement.setAttribute('data-theme', resolved);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
+    <!-- Two static tags so mobile browser chrome matches on first paint too,
+         before the bootstrap script's result can be read back into a meta
+         tag: light-system users get the light tag via the media query, and
+         everyone else falls back to the plain (no-media) dark tag, matching
+         the loader's own dark default. core/store.tsx keeps this fully
+         correct after mount, including for an explicit in-app choice that
+         diverges from the OS setting — something a static media query can't
+         express on its own. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F5FAF8" />
+    <meta name="theme-color" content="#07191E" />
+    <meta name="description" content="Math Engine — فضای کاری ریاضی آفلاین: ماشین‌حساب، کتابخانه فرمول، مبدل واحد" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Math Engine</title>
+    <style>
+      /* Launch loader — pure HTML/CSS so it paints instantly, before the JS
+         bundle even parses. Inspired by a Uiverse.io "cloud sync" loader's
+         motion (a continuously rotating ring + staggered pulsing dots),
+         recolored to our own palette and built around our Σ mark instead. */
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #07191e;
+        transition: opacity 420ms ease, visibility 420ms ease;
+      }
+      html[data-theme='light'] #app-loader {
+        background: #f5faf8;
+      }
+      #app-loader.al-hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .al-ring-wrap {
+        position: relative;
+        width: 68px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .al-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 3px solid rgba(153, 204, 51, 0.14);
+        border-top-color: #99cc33;
+        border-right-color: #02f5a1;
+        animation: al-spin 1050ms cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+      }
+      .al-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: linear-gradient(160deg, #99cc33, #5f8f1f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 18px rgba(153, 204, 51, 0.35);
+        animation: al-breathe 2100ms ease-in-out infinite;
+      }
+      .al-mark span {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: #0a1a10;
+      }
+      .al-dots {
+        display: flex;
+        gap: 7px;
+      }
+      .al-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #99cc33;
+        animation: al-pulse 1100ms ease-in-out infinite;
+      }
+      .al-dot:nth-child(2) {
+        animation-delay: 160ms;
+        background: #7fb82e;
+      }
+      .al-dot:nth-child(3) {
+        animation-delay: 320ms;
+        background: #02f5a1;
+      }
+      @keyframes al-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes al-breathe {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.06);
+        }
+      }
+      @keyframes al-pulse {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.55);
+          opacity: 0.35;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .al-ring,
+        .al-mark,
+        .al-dot {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-loader" aria-hidden="true">
+      <div class="al-ring-wrap">
+        <div class="al-ring"></div>
+        <div class="al-mark"><span>&Sigma;</span></div>
+      </div>
+      <div class="al-dots">
+        <span class="al-dot"></span>
+        <span class="al-dot"></span>
+        <span class="al-dot"></span>
+      </div>
+    </div>
+    <script>
+      window.__appLoadStart = Date.now();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
