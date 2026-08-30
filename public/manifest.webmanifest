@@ -1,0 +1,16 @@
+{
+  "name": "Math Engine",
+  "short_name": "Math Engine",
+  "description": "فضای کاری ریاضی آفلاین: ماشین‌حساب، کتابخانه فرمول، مبدل واحد",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07191e",
+  "theme_color": "#07191e",
+  "dir": "rtl",
+  "lang": "fa",
+  "icons": [
+    { "src": "favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "apple-touch-icon.png", "type": "image/png", "sizes": "180x180", "purpose": "any" }
+  ]
+}

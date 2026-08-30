@@ -1,0 +1,876 @@
+@import '@fontsource-variable/vazirmatn';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════
+   MATH ENGINE — DESIGN TOKENS (Frozen v1.0)
+   Single visual identity. No theme switching.
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* Brand palette */
+  --bg-primary: #07191e;          /* Deep Onyx — 70% */
+  --bg-surface: #0b232a;          /* slightly lighter surface */
+  --bg-surface-2: #0e2b33;        /* Dark Green derived panels */
+  --bg-surface-3: #123540;
+  --accent-primary: #99cc33;      /* Martian Green — 8% */
+  --accent-highlight: #02f5a1;    /* Spring Green — 2% (neon, sparingly) */
+
+  --text-primary: #e9f2ef;
+  --text-secondary: var(--text-primary);
+  --text-tertiary: var(--text-primary);
+
+  --border-subtle: rgba(233, 242, 239, 0.07);
+  --border-strong: rgba(233, 242, 239, 0.14);
+
+  --success: #02f5a1;
+  --warning: #f5b502;
+  --error: #f5564a;
+
+  /* Glass */
+  --glass-bg: rgba(14, 43, 51, 0.55);
+  --glass-border: rgba(233, 242, 239, 0.09);
+
+  /* Filled surfaces (inputs, segmented tracks, sidebar chrome) — a solid-ish
+     fill distinct from --glass-bg's lighter translucency. Two weights:
+     -fill for inputs/pills, -chrome for the denser sidebar backdrop. */
+  --surface-fill: rgba(7, 25, 30, 0.6);
+  --surface-chrome: rgba(7, 25, 30, 0.72);
+
+  /* Radii (frozen) */
+  --r-card: 20px;
+  --r-button: 18px;
+  --r-input: 18px;
+  --r-modal: 28px;
+  --r-floating: 30px;
+
+  /* Motion (frozen): 180–250ms, ease-out. Entrances decelerate in (--ease);
+     exits accelerate away (--ease-in) and run shorter (--dur-exit) — a
+     dismissal that lingers as long as an arrival feels sluggish, not calm.
+     --ease-spring is reserved for state "settles into place" moments
+     (toggles, the segmented glider) — a small, tasteful overshoot, not a
+     bounce. */
+  --dur-fast: 180ms;
+  --dur-med: 230ms;
+  --dur-exit: calc(var(--dur-med) * 0.72);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Elevation */
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 8px 28px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 18px 55px rgba(0, 0, 0, 0.42);
+  --glow-accent: 0 0 22px rgba(2, 245, 161, 0.16);
+
+  /* Runtime quality flags (Adaptive Graphics Engine) */
+  --blur-glass: 18px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME — html[data-theme='light']
+   Same architecture as the quality-tier blocks below: an attribute-selector
+   override block that only ever ADDS rules scoped to that attribute, so
+   Dark Mode (the default — no data-theme='light' present) is completely
+   untouched by any of this. Two parts:
+    1. Token overrides — covers every component built on var(--...), which
+       is most of the app, for free.
+    2. Targeted overrides for the handful of rules below that use a
+       hardcoded rgba()/hex literal instead of a token (mostly translucent
+       "wash" colors, e.g. rgba(153,204,51,0.1) for a subtle accent-tinted
+       hover). Each literal is swapped for the same alpha against the
+       equivalent light-palette color, so it reads as the same design
+       intent, not a copy of the dark value.
+   ═══════════════════════════════════════════════════════════ */
+html[data-theme='light'] {
+  --bg-primary: #f5faf8;
+  --bg-surface: #ecf5f2;
+  --bg-surface-2: #e3efeb;
+  --bg-surface-3: #d6e8e2;
+  --accent-primary: #78b82a;
+  --accent-highlight: #00b978;
+
+  --text-primary: #102c2a;
+  --text-secondary: var(--text-primary);
+  --text-tertiary: var(--text-primary);
+
+  --border-subtle: rgba(16, 44, 42, 0.08);
+  --border-strong: rgba(16, 44, 42, 0.15);
+
+  --success: #00b978;
+  --warning: #d99a00;
+  --error: #e5484d;
+
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(16, 44, 42, 0.1);
+
+  /* Requested: lighter, greener fill than the previous muddy-dark leftover
+     (was an unconditional dark rgba that ignored the light theme entirely). */
+  --surface-fill: rgba(234, 243, 233, 0.88);
+  --surface-chrome: rgba(234, 243, 233, 0.95);
+
+  --shadow-1: 0 2px 10px rgba(16, 44, 42, 0.08);
+  --shadow-2: 0 8px 28px rgba(16, 44, 42, 0.12);
+  --shadow-3: 0 18px 55px rgba(16, 44, 42, 0.16);
+  --glow-accent: 0 0 22px rgba(0, 185, 120, 0.18);
+}
+/* Quality tiers (below) also set --shadow-1/2/3 for the current quality
+   level; since those blocks come later in the file, source order alone
+   would make them win over the light-theme values above on a light+low
+   device, silently reintroducing dark rgba(0,0,0,..) shadows. Re-assert the
+   light versions at each tier, at least as specific as html[data-quality]
+   alone, so light+any-quality always gets light-toned shadows. */
+html[data-theme='light'][data-quality='high'] {
+  --shadow-1: 0 2px 10px rgba(16, 44, 42, 0.08);
+  --shadow-2: 0 8px 28px rgba(16, 44, 42, 0.12);
+  --shadow-3: 0 18px 55px rgba(16, 44, 42, 0.16);
+}
+html[data-theme='light'][data-quality='medium'] {
+  --shadow-1: 0 1px 5px rgba(16, 44, 42, 0.06);
+  --shadow-2: 0 3px 10px rgba(16, 44, 42, 0.08);
+  --shadow-3: 0 6px 18px rgba(16, 44, 42, 0.1);
+}
+html[data-theme='light'][data-quality='low'],
+html[data-theme='light'][data-quality='battery'] {
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+  --glow-accent: none;
+}
+
+/* -- Targeted overrides for hardcoded-literal rules -- */
+html[data-theme='light'] ::selection {
+  background: rgba(120, 184, 42, 0.28);
+}
+html[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(16, 44, 42, 0.12);
+}
+html[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 44, 42, 0.2);
+}
+html[data-theme='light'] .glass {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(16, 44, 42, 0.06), inset 1px 0 0 rgba(255, 255, 255, 0.4), inset -1px 0 0 rgba(16, 44, 42, 0.04);
+}
+html[data-theme='light'] .glass-strong {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(16, 44, 42, 0.08), 0 12px 40px rgba(16, 44, 42, 0.14);
+}
+html[data-theme='light'] .glass::before,
+html[data-theme='light'] .glass-strong::before {
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0) 68%, rgba(0, 185, 120, 0.06) 100%);
+}
+html[data-theme='light'] .scrim {
+  background: rgba(214, 232, 226, 0.65);
+}
+html[data-theme='light'] .key {
+  background: linear-gradient(170deg, rgba(16, 44, 42, 0.045), rgba(16, 44, 42, 0.02));
+  border: 1px solid rgba(16, 44, 42, 0.06);
+}
+html[data-theme='light'] .key:hover {
+  background: rgba(16, 44, 42, 0.065);
+}
+html[data-theme='light'] .key-op {
+  background: rgba(120, 184, 42, 0.1);
+  border-color: rgba(120, 184, 42, 0.2);
+}
+html[data-theme='light'] .key-op:hover {
+  background: rgba(120, 184, 42, 0.18);
+}
+html[data-theme='light'] .key-eq {
+  background: linear-gradient(160deg, var(--accent-primary), #5f9420);
+  color: #f5faf8;
+  box-shadow: 0 4px 18px rgba(120, 184, 42, 0.28);
+}
+html[data-theme='light'] .key-eq:hover {
+  background: linear-gradient(160deg, #8dc93f, #6ca82a);
+}
+html[data-theme='light'] .key-danger {
+  background: rgba(229, 72, 77, 0.09);
+  border-color: rgba(229, 72, 77, 0.16);
+}
+html[data-theme='light'] .key-locked {
+  background: linear-gradient(135deg, rgba(120, 184, 42, 0.22), rgba(0, 185, 120, 0.14)) !important;
+  border-color: rgba(120, 184, 42, 0.4) !important;
+}
+html[data-theme='light'] .sci-toggle-on {
+  background: rgba(120, 184, 42, 0.16);
+}
+html[data-theme='light'] .key-ping {
+  background: radial-gradient(circle, rgba(0, 185, 120, 0.28), transparent 70%);
+}
+html[data-theme='light'] .me-input {
+  background: rgba(255, 255, 255, 0.7);
+}
+html[data-theme='light'] .me-input:focus {
+  border-color: rgba(120, 184, 42, 0.55);
+  box-shadow: 0 0 0 3px rgba(120, 184, 42, 0.14);
+}
+html[data-theme='light'] .unit-select {
+  background-color: rgba(120, 184, 42, 0.12);
+  border-color: rgba(120, 184, 42, 0.26);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2378b82a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+html[data-theme='light'] .unit-select:focus {
+  border-color: rgba(120, 184, 42, 0.55);
+  box-shadow: 0 0 0 3px rgba(120, 184, 42, 0.14);
+}
+html[data-theme='light'] .chip {
+  background: rgba(16, 44, 42, 0.035);
+}
+html[data-theme='light'] .chip.active {
+  background: rgba(120, 184, 42, 0.16);
+  border-color: rgba(120, 184, 42, 0.4);
+}
+html[data-theme='light'] .focus-ring:focus-visible {
+  outline-color: var(--accent-primary);
+}
+html[data-theme='light'] .app-ambient {
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgba(0, 185, 120, 0.06), transparent 60%),
+    radial-gradient(700px 420px at -10% 100%, rgba(120, 184, 42, 0.05), transparent 55%),
+    radial-gradient(500px 300px at 50% 50%, rgba(0, 185, 120, 0.03), transparent 70%);
+}
+html[data-theme='light'] .delete-btn {
+  background: rgba(229, 72, 77, 0.09);
+  border-color: rgba(229, 72, 77, 0.15);
+}
+html[data-theme='light'] .delete-btn:hover,
+html[data-theme='light'] .delete-btn:active,
+html[data-theme='light'] .delete-btn:focus-visible {
+  color: #fffafa;
+}
+
+/* Quality profiles — Progressive Enhancement (each level must be clearly felt).
+   The gap between tiers is deliberately large: a subtle blur/duration tweak
+   is not something most people consciously notice when they flip a setting,
+   but an effect being *present vs. absent* always is. So besides shrinking
+   numbers, each step down also drops entire decorative flourishes. */
+html[data-quality='high'] {
+  --blur-glass: 22px;
+  --dur-fast: 180ms;
+  --dur-med: 230ms;
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 8px 28px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 18px 55px rgba(0, 0, 0, 0.42);
+}
+html[data-quality='medium'] {
+  --blur-glass: 5px;
+  --dur-fast: 110ms;
+  --dur-med: 140ms;
+  --shadow-1: 0 1px 5px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.2);
+  --shadow-3: 0 6px 18px rgba(0, 0, 0, 0.24);
+}
+html[data-quality='low'],
+html[data-quality='battery'] {
+  --blur-glass: 0px;
+  --dur-fast: 1ms;
+  --dur-med: 1ms;
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+  --glow-accent: none;
+}
+html[data-quality='medium'] .card-hover:hover {
+  transform: none;
+}
+html[data-quality='low'] .card,
+html[data-quality='low'] .glass,
+html[data-quality='low'] .glass-strong {
+  box-shadow: none !important;
+}
+
+/* See the comment on the quality profiles above: presence/absence beats
+   number-tweaking for a felt difference. */
+html[data-quality='medium'] .key-ping,
+html[data-quality='low'] .key-ping,
+html[data-quality='battery'] .key-ping {
+  display: none;
+}
+html[data-quality='medium'] .sci-toggle-on,
+html[data-quality='low'] .sci-toggle-on,
+html[data-quality='battery'] .sci-toggle-on {
+  animation: none;
+}
+html[data-quality='low'] .glider,
+html[data-quality='battery'] .glider {
+  box-shadow: none;
+}
+html[data-quality='low'] .delete-btn,
+html[data-quality='battery'] .delete-btn {
+  transition: none;
+}
+html[data-quality='low'] .card-hover:hover {
+  transform: none;
+  box-shadow: none;
+}
+html[data-motion='off'] * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+html[data-blur='off'] .glass,
+html[data-blur='off'] .glass-strong {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-surface-2) !important;
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Vazirmatn Variable', 'Vazirmatn', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'tnum' 1, 'ss01' 1;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: rgba(153, 204, 51, 0.28);
+}
+
+/* Scrollbars — quiet */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(233, 242, 239, 0.1);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(233, 242, 239, 0.18);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Numbers stay Latin & tabular everywhere (calculator-grade) */
+.tnum,
+input[type='text'].numeric,
+.calc-display {
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: 0.01em;
+}
+
+/* ── Component primitives (token-driven) ─────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.3);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(233, 242, 239, 0.14), inset 0 -1px 0 rgba(0, 0, 0, 0.18), inset 1px 0 0 rgba(233, 242, 239, 0.05), inset -1px 0 0 rgba(0, 0, 0, 0.08);
+}
+.glass-strong {
+  background: rgba(10, 34, 41, 0.78);
+  backdrop-filter: blur(calc(var(--blur-glass) * 1.4)) saturate(1.35);
+  -webkit-backdrop-filter: blur(calc(var(--blur-glass) * 1.4)) saturate(1.35);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(233, 242, 239, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.22), 0 12px 40px rgba(0, 0, 0, 0.32);
+}
+.glass::before,
+.glass-strong::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(233, 242, 239, 0.09) 0%, rgba(233, 242, 239, 0) 32%, rgba(233, 242, 239, 0) 68%, rgba(2, 245, 161, 0.05) 100%);
+  pointer-events: none;
+}
+html[data-quality='low'] .glass::before,
+html[data-quality='battery'] .glass::before,
+html[data-quality='low'] .glass-strong::before,
+html[data-quality='battery'] .glass-strong::before {
+  display: none;
+}
+.card {
+  background: linear-gradient(165deg, var(--bg-surface-2), var(--bg-surface));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-1);
+}
+.card-hover {
+  transition: transform var(--dur-med) var(--ease), border-color var(--dur-med) var(--ease),
+    box-shadow var(--dur-med) var(--ease);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+.press {
+  transition: transform var(--dur-med) var(--ease-spring), background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.press:active {
+  transform: scale(0.96);
+  transition-duration: 90ms;
+  transition-timing-function: var(--ease);
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Page transition — short, soft, purposeful */
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-in {
+  animation: pageIn var(--dur-med) var(--ease) both;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes resultFlash {
+  0% {
+    color: var(--accent-highlight);
+  }
+  100% {
+    color: var(--text-primary);
+  }
+}
+.result-flash {
+  animation: resultFlash 600ms var(--ease);
+}
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes sheetDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes backdropOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes popOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes sheetUp {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.99);
+  }
+}
+@keyframes fadeDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Scrim — the backdrop behind Sheets/modals/the search palette. Part of the
+   same liquid-glass system as .glass/.glass-strong (tinted, blurred,
+   quality-aware) rather than a flat black overlay unrelated to it. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 12, 15, 0.58);
+  backdrop-filter: blur(calc(var(--blur-glass) * 0.32)) saturate(1.1);
+  -webkit-backdrop-filter: blur(calc(var(--blur-glass) * 0.32)) saturate(1.1);
+}
+
+/* Key press — deliberate feedback that releases the instant the finger
+   lifts. .key-active is toggled from JS on pointerdown/up so the effect
+   never gets "stuck" if the pointer drags off the button. */
+.key.key-active,
+.key:active {
+  transform: scale(0.95);
+  filter: brightness(0.7) saturate(1.1);
+  transition: transform 120ms ease-in-out, filter 200ms ease-in-out, background 200ms ease-in-out;
+}
+
+/* Keypad button sheen */
+.key {
+  border-radius: var(--r-button);
+  background: linear-gradient(170deg, rgba(233, 242, 239, 0.055), rgba(233, 242, 239, 0.028));
+  border: 1px solid rgba(233, 242, 239, 0.05);
+  color: var(--text-primary);
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  font-family: -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(0.9rem, 3.4vh, 1.4rem);
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform 160ms var(--ease), filter 200ms ease-in-out, background 200ms ease-in-out;
+}
+.key:hover {
+  background: rgba(233, 242, 239, 0.085);
+}
+.key-op {
+  color: var(--accent-primary);
+  background: rgba(153, 204, 51, 0.09);
+  border-color: rgba(153, 204, 51, 0.16);
+}
+.key-op:hover {
+  background: rgba(153, 204, 51, 0.16);
+}
+.key-eq {
+  background: linear-gradient(160deg, var(--accent-primary), #7ba828);
+  color: #0a1a10;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 18px rgba(153, 204, 51, 0.25);
+}
+.key-eq:hover {
+  background: linear-gradient(160deg, #a8d948, #8abb33);
+}
+.key-danger {
+  color: var(--error);
+  background: rgba(245, 86, 74, 0.08);
+  border-color: rgba(245, 86, 74, 0.14);
+}
+
+/* Inputs */
+.me-input {
+  background: var(--surface-fill);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-input);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  font-size: 1rem;
+  width: 100%;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+  font-family: inherit;
+}
+.me-input:focus {
+  outline: none;
+  border-color: rgba(153, 204, 51, 0.5);
+  box-shadow: 0 0 0 3px rgba(153, 204, 51, 0.12);
+}
+.me-input::placeholder {
+  color: var(--text-tertiary);
+}
+.unit-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: rgba(153, 204, 51, 0.1);
+  border: 1px solid rgba(153, 204, 51, 0.22);
+  border-radius: 8px;
+  color: var(--accent-primary);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 3px 22px 3px 8px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2399cc33' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 9px;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.unit-select:focus {
+  outline: none;
+  border-color: rgba(153, 204, 51, 0.5);
+  box-shadow: 0 0 0 3px rgba(153, 204, 51, 0.12);
+}
+
+/* Chips */
+.chip {
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  border: 1px solid var(--border-subtle);
+  background: rgba(233, 242, 239, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--dur-fast) var(--ease);
+}
+.chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.chip.active {
+  background: rgba(153, 204, 51, 0.14);
+  border-color: rgba(153, 204, 51, 0.4);
+  color: var(--accent-primary);
+}
+
+/* Chip row — horizontal scroller that reads as premium, not "cheap".
+   Scrollbar is hidden; soft edge fades hint that more content exists. */
+.chip-row {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ambient background — deep, calm, alive */
+.app-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgba(0, 51, 51, 0.55), transparent 60%),
+    radial-gradient(700px 420px at -10% 100%, rgba(0, 51, 51, 0.35), transparent 55%),
+    radial-gradient(500px 300px at 50% 50%, rgba(2, 245, 161, 0.018), transparent 70%);
+}
+html[data-quality='low'] .app-ambient,
+html[data-quality='battery'] .app-ambient {
+  background: none;
+}
+
+/* Focus Mode — everything unnecessary disappears */
+.focus-mode .nav-chrome {
+  display: none !important;
+}
+.focus-mode .focus-dim {
+  opacity: 0.35;
+  filter: saturate(0.6);
+}
+.focus-mode .app-ambient {
+  opacity: 0.4;
+}
+
+/* Print hidden */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Calculator — entrance & tactile feedback ─────────────
+   Same "opens like every other section" idea as .page-in, with a touch
+   more presence (a hint of scale, iOS-card style) since this is the
+   flagship screen. Respects the Adaptive Graphics Engine + reduced-motion
+   the same way every other animation in the app does. */
+@keyframes calcIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.calc-in {
+  animation: calcIn var(--dur-med) var(--ease) both;
+}
+@keyframes calcPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.calc-panel-in {
+  animation: calcPanelIn var(--dur-med) var(--ease) both;
+}
+
+/* Reactive key press: a brief radial glow "ping" layered on top of the
+   existing scale+brightness feedback — fires fresh on every press because
+   the pinging element is re-mounted (key={pressId}) rather than replayed
+   via a CSS class toggle, so rapid repeated taps each get their own pulse. */
+@keyframes keyPing {
+  from {
+    opacity: 0.55;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+.key-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(2, 245, 161, 0.32), transparent 70%);
+  animation: keyPing 420ms var(--ease) both;
+  pointer-events: none;
+}
+
+.key-locked {
+  background: linear-gradient(135deg, rgba(153, 204, 51, 0.24), rgba(2, 245, 161, 0.15)) !important;
+  border-color: rgba(153, 204, 51, 0.4) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* Scientific-mode toggle — lights up like a switch flicking on, not a
+   flat instant color-swap. Inspired by a Uiverse.io rainbow-glow checkbox,
+   recolored to our accent and toned down to a single soft burst. */
+@keyframes sciIgnite {
+  0% {
+    box-shadow: 0 0 0 0 rgba(153, 204, 51, 0.55);
+  }
+  55% {
+    box-shadow: 0 0 16px 5px rgba(153, 204, 51, 0.32);
+  }
+  100% {
+    box-shadow: 0 0 10px 1px rgba(2, 245, 161, 0.22);
+  }
+}
+.sci-toggle-on {
+  background: rgba(153, 204, 51, 0.16);
+  color: var(--accent-primary);
+  animation: sciIgnite 480ms var(--ease) both;
+}
+
+/* Delete button — a circle that eases open into a labeled pill on
+   hover/press, instead of firing instantly. Inspired by a Uiverse.io
+   design; recolored to our error token and widened via an explicit
+   pixel width (not `auto`) so the expansion actually animates smoothly.
+   Responds to :active too, not just :hover, so it still means something
+   on touch. */
+.delete-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: var(--del-size, 30px);
+  height: var(--del-size, 30px);
+  border-radius: 999px;
+  background: rgba(245, 86, 74, 0.1);
+  border: 1px solid rgba(245, 86, 74, 0.16);
+  color: var(--error);
+  overflow: hidden;
+  transition: width 300ms var(--ease), background 220ms var(--ease), border-color 220ms var(--ease), color 220ms var(--ease);
+}
+.delete-btn-icon {
+  flex-shrink: 0;
+  transition: transform 300ms var(--ease);
+}
+.delete-btn-label {
+  /* max-width (not just opacity) is what actually removes this from the
+     flex layout at rest — opacity:0 alone still reserves its full text
+     width, which was squeezing the icon out of the circle entirely. */
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: max-width 280ms var(--ease), opacity 160ms var(--ease);
+}
+.delete-btn:hover,
+.delete-btn:active,
+.delete-btn:focus-visible {
+  width: 92px;
+  background: var(--error);
+  border-color: var(--error);
+  color: #fff5f4;
+}
+.delete-btn:hover .delete-btn-icon,
+.delete-btn:active .delete-btn-icon,
+.delete-btn:focus-visible .delete-btn-icon {
+  transform: rotate(360deg);
+}
+.delete-btn:hover .delete-btn-label,
+.delete-btn:active .delete-btn-label,
+.delete-btn:focus-visible .delete-btn-label {
+  max-width: 60px;
+  opacity: 1;
+  transition-delay: 90ms;
+}
