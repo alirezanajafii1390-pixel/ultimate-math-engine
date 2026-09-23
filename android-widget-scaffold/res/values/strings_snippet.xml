@@ -1,0 +1,9 @@
+<!--
+  MERGE, do not replace: add these two <string> entries inside the
+  existing <resources> block of android/app/src/main/res/values/strings.xml
+  (that file already exists once `npx cap add android` has been run —
+  it holds app_name, title_activity_main, etc. Do not overwrite it,
+  just add these two lines inside it).
+-->
+<string name="widget_label">Math Engine</string>
+<string name="widget_description">Open Math Engine</string>

@@ -34,6 +34,15 @@ export const webAdapter: PlatformAdapter = {
     },
   },
 
+  hardwareBack: {
+    isSupported: false,
+    onBack() {
+      return () => {};
+    },
+  },
+
+  minimize() {},
+
   mainButton: {
     isSupported: false,
     show() {},

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Matches core app's dark theme background (#0a0a0f, same value used
+  in CapacitorPlatformProvider's syncStatusBarToTheme for the dark
+  status bar). Widgets can't read the live in-app data-theme attribute
+  (no WebView here), so V1 always renders in the app's default (dark)
+  brand color rather than trying to track the in-app theme toggle —
+  a V2 concern, not a V1 one.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#0a0a0f" />
+    <corners android:radius="20dp" />
+</shape>

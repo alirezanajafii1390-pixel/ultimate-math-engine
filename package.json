@@ -12,6 +12,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
     "@fontsource-variable/vazirmatn": "^5.2.8",
     "@tma.js/sdk-react": "^3.0.19",
     "lucide-react": "^0.562.0",
@@ -20,6 +25,7 @@
     "react-router": "^7.6.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",

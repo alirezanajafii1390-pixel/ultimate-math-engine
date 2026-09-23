@@ -2,6 +2,7 @@ import { Component, createContext, useContext, useState, Suspense, lazy, type Er
 import type { PlatformAdapter } from './types';
 import { webAdapter } from './webAdapter';
 import { isTelegramEnvironment } from './detectTelegram';
+import { isCapacitorNativeEnvironment } from './detectCapacitor';
 
 export const PlatformCtx = createContext<PlatformAdapter>(webAdapter);
 
@@ -16,6 +17,10 @@ export function usePlatform(): PlatformAdapter {
 // never fetch this chunk — the Telegram SDK is not part of their bundle
 // path at all, not just unused code sitting in it.
 const TelegramPlatformProvider = lazy(() => import('./telegram/TelegramPlatformProvider'));
+
+// Same reasoning, same guarantee, for the Capacitor/Android chunk: a
+// plain Web (or Telegram) load never fetches '@capacitor/*' at all.
+const CapacitorPlatformProvider = lazy(() => import('./capacitor/CapacitorPlatformProvider'));
 
 /** Nothing in the tree above TelegramPlatformProvider can catch a render
  *  error it throws (the app's own layout/ErrorBoundary sits INSIDE it,
@@ -32,7 +37,7 @@ class PlatformErrorBoundary extends Component<{ children: ReactNode }, { failed:
     return { failed: true, message: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.warn('[platform] Telegram SDK failed, falling back to Web mode:', error, info.componentStack);
+    console.warn('[platform] native platform adapter failed, falling back to Web mode:', error, info.componentStack);
   }
   render() {
     if (this.state.failed) {
@@ -42,22 +47,37 @@ class PlatformErrorBoundary extends Component<{ children: ReactNode }, { failed:
   }
 }
 
-/** Wrap the app once, near the root. Decides once (at mount) whether
- *  we're inside Telegram and, if so, lazy-loads the real adapter behind
- *  Suspense — children keep rendering against the safe web adapter in
- *  the meantime, so there is no blank frame while the SDK chunk loads. */
+/** Wrap the app once, near the root. Decides once (at mount) which
+ *  native platform we're inside, if any, and — if so — lazy-loads the
+ *  real adapter behind Suspense; children keep rendering against the
+ *  safe web adapter in the meantime, so there is no blank frame while
+ *  the chunk loads. Exactly one of the two native environments can be
+ *  true at once in practice (a Capacitor Android build never also looks
+ *  like a Telegram launch), so this is a priority order, not a runtime
+ *  conflict — Telegram is checked first only because it existed first. */
 export function PlatformProvider({ children }: { children: ReactNode }) {
   const [inTelegram] = useState(isTelegramEnvironment);
+  const [inCapacitor] = useState(isCapacitorNativeEnvironment);
 
-  if (!inTelegram) {
-    return <PlatformCtx.Provider value={webAdapter}>{children}</PlatformCtx.Provider>;
+  if (inTelegram) {
+    return (
+      <PlatformErrorBoundary>
+        <Suspense fallback={<PlatformCtx.Provider value={webAdapter}>{children}</PlatformCtx.Provider>}>
+          <TelegramPlatformProvider>{children}</TelegramPlatformProvider>
+        </Suspense>
+      </PlatformErrorBoundary>
+    );
   }
 
-  return (
-    <PlatformErrorBoundary>
-      <Suspense fallback={<PlatformCtx.Provider value={webAdapter}>{children}</PlatformCtx.Provider>}>
-        <TelegramPlatformProvider>{children}</TelegramPlatformProvider>
-      </Suspense>
-    </PlatformErrorBoundary>
-  );
+  if (inCapacitor) {
+    return (
+      <PlatformErrorBoundary>
+        <Suspense fallback={<PlatformCtx.Provider value={webAdapter}>{children}</PlatformCtx.Provider>}>
+          <CapacitorPlatformProvider>{children}</CapacitorPlatformProvider>
+        </Suspense>
+      </PlatformErrorBoundary>
+    );
+  }
+
+  return <PlatformCtx.Provider value={webAdapter}>{children}</PlatformCtx.Provider>;
 }

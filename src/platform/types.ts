@@ -57,6 +57,22 @@ export interface PlatformBackButton {
   onClick(cb: () => void): () => void;
 }
 
+/** Android's hardware/system Back event. Deliberately NOT folded into
+ *  PlatformBackButton above — that interface models a visible on-screen
+ *  button Telegram shows/hides on request; Android's Back has no such
+ *  UI to show/hide, it's a raw system event AppShell subscribes to and
+ *  decides navigation policy for itself (same division of responsibility
+ *  as PlatformBackButton: this adapter only exposes the primitive).
+ *  isSupported is false everywhere except the Capacitor/Android adapter. */
+export interface PlatformHardwareBack {
+  isSupported: boolean;
+  /** No-op on Web/Telegram (returns a no-op unsubscribe). Fires on every
+   *  system Back press; AppShell.tsx decides what that means (navigate
+   *  to Home, or — see `minimize()` below — leave the app) rather than
+   *  this layer owning any navigation policy. */
+  onBack(cb: () => void): () => void;
+}
+
 export type HapticImpactStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
 export type HapticNotificationType = 'error' | 'success' | 'warning';
 
@@ -158,6 +174,13 @@ export interface PlatformAdapter {
   theme: PlatformTheme;
   viewport: PlatformViewport;
   backButton: PlatformBackButton;
+  hardwareBack: PlatformHardwareBack;
+  /** Sends the app to the background using the platform's own standard
+   *  behavior (Android: task minimize, not process kill). No-op on Web
+   *  and Telegram — there is nothing equivalent to call there, and
+   *  Telegram's own Back Button UI already covers that context's exit
+   *  path. Only meaningful alongside hardwareBack.isSupported. */
+  minimize(): void;
   mainButton: PlatformMainButton;
   haptics: PlatformHaptics;
   initData: PlatformInitData;

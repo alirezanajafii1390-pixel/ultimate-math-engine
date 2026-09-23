@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Math Engine</string>
+    <string name="title_activity_main">Math Engine</string>
+    <string name="package_name">dev.mathengine.app</string>
+    <string name="custom_url_scheme">dev.mathengine.app</string>
+    <string name="widget_label">Math Engine</string>
+    <string name="widget_description">Open Math Engine</string>
+</resources>

@@ -179,6 +179,17 @@ export default function TelegramPlatformProvider({ children }: { children: React
         },
       },
 
+      // Telegram has no hardware Back event of its own — the on-screen
+      // backButton above already covers this context's exit path, so
+      // this stays inert here exactly like it does on Web.
+      hardwareBack: {
+        isSupported: false,
+        onBack() {
+          return () => {};
+        },
+      },
+      minimize() {},
+
       // Real setParams/onClick, mirroring the backButton primitive above —
       // used so far by FormulaPage's detail view (mirrors its existing
       // favorite icon-button as a Telegram-native bottom action; see

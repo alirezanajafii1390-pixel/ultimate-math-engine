@@ -143,6 +143,25 @@ export default function AppShell() {
     else platform.backButton.show();
   }, [platform.isTelegram, platform.backButton, location.pathname]);
 
+  // Android's hardware Back (Phase 3, Decision 2): same "flat routes ⇒
+  // Home" reasoning as Telegram's Back Button above, plus the one thing
+  // Telegram never needed — what to do once we're already at Home. There
+  // Telegram's own chrome owns "leaving"; on Android, per Decision 2, the
+  // OS convention is minimizing the task, not killing the process. Reads
+  // location.pathname via a ref rather than a dependency so this doesn't
+  // re-subscribe on every navigation — hardwareBack.onBack() is
+  // registered once, same spirit as the Telegram effect's one-time
+  // registration.
+  const locationRef = useRef(location.pathname);
+  locationRef.current = location.pathname;
+  useEffect(() => {
+    if (!platform.hardwareBack.isSupported) return;
+    return platform.hardwareBack.onBack(() => {
+      if (locationRef.current === '/') platform.minimize();
+      else navigate('/');
+    });
+  }, [platform.hardwareBack, platform.minimize, navigate]);
+
   // Deep link via Telegram start_param (t.me/bot/app?startapp=...): decodes
   // it and hands off to each page's *existing* URL-param handling
   // (?expr=, ?f=&v_<key>=, ?cat=&from=&to=&val=) rather than duplicating
