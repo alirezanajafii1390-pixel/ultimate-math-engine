@@ -77,7 +77,13 @@ export function Btn({ variant = 'secondary', size = 'md', className = '', ...res
   const sizes = { sm: 'h-9 px-3.5 text-sm', md: 'h-12 px-5 text-[15px]', lg: 'h-12 px-6 text-base' };
   return (
     <button
-      className={`press focus-ring inline-flex items-center justify-center gap-2 rounded-[var(--r-button)] font-medium disabled:opacity-40 disabled:pointer-events-none ${sizes[size]} ${btnStyles[variant]} ${className}`}
+      // whitespace-nowrap: real-device testing (Android system WebView)
+      // showed two-word Persian labels (e.g. "ساخت فرمول") wrapping onto
+      // two lines — Vazirmatn's variable-font metrics render a hair
+      // wider there than in desktop Chrome/Telegram's WebView, enough to
+      // tip borderline-width buttons over. Buttons are meant to size to
+      // their label, not wrap it.
+      className={`press focus-ring inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[var(--r-button)] font-medium disabled:opacity-40 disabled:pointer-events-none ${sizes[size]} ${btnStyles[variant]} ${className}`}
       {...rest}
     />
   );
@@ -166,14 +172,50 @@ export function Segmented<T extends string>({
   const [glider, setGlider] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
   const measure = useCallback(() => {
-    const btn = btnRefs.current.get(value);
-    if (btn) setGlider({ left: btn.offsetLeft, top: btn.offsetTop, width: btn.offsetWidth, height: btn.offsetHeight });
+    // Real-device finding (first actual on-device test, not previously
+    // verified despite an earlier comment here claiming otherwise): a
+    // ResizeObserver alone can still fire and read offsetLeft/offsetWidth
+    // BEFORE the browser has finished the layout reflow triggered by an
+    // RTL/LTR `dir` flip on <html> (language switch), capturing stale
+    // geometry from the pre-flip layout. Deferring the actual read to the
+    // next animation frame guarantees layout has settled first.
+    requestAnimationFrame(() => {
+      const btn = btnRefs.current.get(value);
+      if (btn) setGlider({ left: btn.offsetLeft, top: btn.offsetTop, width: btn.offsetWidth, height: btn.offsetHeight });
+    });
   }, [value]);
 
   useLayoutEffect(() => {
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    // Real-device finding: switching language changes each option's
+    // label text (and thus its rendered width) WITHOUT necessarily
+    // changing `value` or the `options` array reference, and without
+    // firing a window resize event — so the old effect could leave the
+    // glider measured against stale button widths after a language
+    // switch, visibly misaligned. A ResizeObserver on the container
+    // catches any actual size change of its children — language switch,
+    // dir flip, font swap, anything — and re-measures unconditionally,
+    // which is a strictly more reliable trigger than trying to
+    // enumerate every cause by hand.
+    const container = containerRef.current;
+    let ro: ResizeObserver | undefined;
+    if (container && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(container);
+    }
+    // A dir flip (language switch) changes each button's rendered width
+    // (different label, different script) without necessarily changing
+    // the *container's* own box size — so the container ResizeObserver
+    // above can miss it. Watching <html dir> directly catches this case
+    // independent of any size-change heuristic.
+    const dirObserver = new MutationObserver(() => measure());
+    dirObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['dir'] });
+    return () => {
+      window.removeEventListener('resize', measure);
+      ro?.disconnect();
+      dirObserver.disconnect();
+    };
   }, [measure, options]);
 
   return (

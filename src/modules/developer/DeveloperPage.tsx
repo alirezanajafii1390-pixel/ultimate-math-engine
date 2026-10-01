@@ -13,6 +13,7 @@ import { bus, EVENT_LOG_CAP } from '../../core/events';
 import { formatNumber, formatTime } from '../../core/format';
 import { Page, PageHeader, Section, Card, Btn, Toggle, Segmented, SettingRow, useToast } from '../../ui/kit';
 import { usePlatform } from '../../platform/PlatformContext';
+import { isCapacitorNativeEnvironment } from '../../platform/detectCapacitor';
 import changelogRaw from '../../../CHANGELOG.md?raw';
 
 interface LogEntry {
@@ -231,15 +232,21 @@ export default function DeveloperPage() {
               {String(platform.isTelegram)}
             </span>
           </div>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[var(--text-tertiary)]">isCapacitor (Android)</span>
+            <span className={isCapacitorNativeEnvironment() ? 'font-semibold text-[var(--accent-primary)]' : 'text-[var(--error)]'}>
+              {String(isCapacitorNativeEnvironment())}
+            </span>
+          </div>
           {platform.initError && (
             <div className="mt-3 rounded-[var(--r-input)] border border-[var(--error)] bg-[rgba(245,86,74,0.08)] p-3">
               <p className="text-xs font-semibold text-[var(--error)]">initError</p>
               <p className="mt-1 break-all font-mono text-xs text-[var(--text-secondary)]">{platform.initError}</p>
             </div>
           )}
-          {!platform.isTelegram && !platform.initError && (
+          {!platform.isTelegram && !isCapacitorNativeEnvironment() && !platform.initError && (
             <p className="mt-2 text-xs text-[var(--text-tertiary)]">
-              Not running inside Telegram (or the Mini App wasn't opened via t.me/MathEngineANBot/mathengine).
+              Running in a plain web browser — not inside Telegram, not inside the Android app.
             </p>
           )}
         </Card>

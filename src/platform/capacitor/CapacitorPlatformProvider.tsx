@@ -57,6 +57,19 @@ function currentResolvedTheme(): TelegramColorScheme {
  *  user sees, this is a cosmetic sync, not a functional dependency. */
 async function syncStatusBarToTheme(scheme: TelegramColorScheme) {
   try {
+    // Critical fix (real-device Stage 3.10 finding): Android — especially
+    // API 35+ which enforces edge-to-edge — draws the WebView UNDER the
+    // status bar unless explicitly told not to. Decision 1 assumed CSS
+    // env(safe-area-inset-*) alone would keep content clear of the status
+    // bar; on-device testing showed that assumption was wrong (app UI
+    // visibly collided with the clock/battery icons). Forcing
+    // overlay:false makes Android itself reserve the status bar's space
+    // above the WebView natively — the WebView content area shrinks to
+    // start below the status bar, independent of any CSS. Called on
+    // every sync (cheap, idempotent) rather than once, so it survives
+    // whatever else touches window insets during the platform provider's
+    // lifetime.
+    await StatusBar.setOverlaysWebView({ overlay: false });
     if (scheme === 'light') {
       // Light background → dark (readable) status bar icons.
       await StatusBar.setStyle({ style: Style.Light });
